@@ -1,16 +1,23 @@
 import sqlite3
 
-# VULNERABILITY 1: Hardcoded sensitive information
-ADMIN_TOKEN = "SUPER_SECRET_12345" 
+# --- SETUP CODE (Make sure this is at the very top) ---
+conn = sqlite3.connect('users.db')
+cursor = conn.cursor()
+# Create the table and add one real user to test against
+cursor.execute("CREATE TABLE IF NOT EXISTS users (username TEXT, password TEXT)")
+cursor.execute("INSERT OR IGNORE INTO users VALUES ('admin', 'real_password_123')")
+conn.commit()
+# -----------------------------------------------------
 
 def login_user(username, password):
+    # Connect again inside the function to run the query
     conn = sqlite3.connect('users.db')
     cursor = conn.cursor()
     
-    # VULNERABILITY 2: SQL Injection (Directly inserting user input into a query)
+    # The vulnerable query
     query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'"
-    
     print(f"Executing Query: {query}")
+    
     cursor.execute(query)
     user = cursor.fetchone()
     
@@ -19,6 +26,8 @@ def login_user(username, password):
     else:
         return "Invalid Credentials."
 
-# VULNERABILITY 3: Lack of Input Validation
-user_input = "admin' OR '1'='1" # A classic SQL Injection string
-print(login_user(user_input, "any_password"))
+# Use input() so YOU can type the attack during the video
+print("--- SQL Injection Demo ---")
+u_input = input("Enter Username: ")
+p_input = input("Enter Password: ")
+print(login_user(u_input, p_input))
